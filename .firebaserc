@@ -1,0 +1,20 @@
+{
+  "projects": {
+    "default": "metrics-csui"
+  },
+  "targets": {
+    "metrics-csui": {
+      "hosting": {
+        "api": [
+          "api-metrics-csui"
+        ],
+        "click": [
+          "click-metrics-csui"
+        ],
+        "go": [
+          "go-metrics-csui"
+        ]
+      }
+    }
+  }
+}
