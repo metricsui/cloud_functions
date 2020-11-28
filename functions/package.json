@@ -1,7 +1,7 @@
 {
   "name": "functions",
   "scripts": {
-    "lint": "eslint \"src/**/*\"",
+    "lint": "eslint \"src/**/*\" --ignore-pattern \"*.json\"",
     "build": "tsc",
     "serve": "npm run build && firebase --debug emulators:start --only functions --inspect-functions 9230",
     "shell": "npm run build && firebase functions:shell",

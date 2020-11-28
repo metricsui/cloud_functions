@@ -9,7 +9,7 @@ import User from './models/User'
 
 import { withEnableCORS } from './utils/decorators'
 
-function validateTicket(ticket: string): Promise<SsoPayload> {
+function validateTicket(ticket: string, service: string): Promise<SsoPayload> {
   return new Promise(async (resolve, reject) => {
     try {
       const resp = await axios.default.get(
@@ -17,8 +17,8 @@ function validateTicket(ticket: string): Promise<SsoPayload> {
         {
           params: {
             format: 'json',
-            service: 'https://dev.metricsui.com',
-            ticket: ticket,
+            service,
+            ticket,
           },
           timeout: 5000,
         }
@@ -47,19 +47,28 @@ async function signIn(req: functions.Request, res: functions.Response) {
     })
     return
   }
-  const { ticket } = req.body
+  const { ticket, service } = req.body
   if (!ticket) {
     functions.logger.error(
       `[signIn] missing required params 'ticket'. request: ${req}`
     )
     res.status(400).json({
       status: 400,
-      message: 'Ticket params is required',
+      message: '"ticket" is required',
+    })
+    return
+  } else if (!service) {
+    functions.logger.error(
+      `[signIn] missing required params 'service'. request: ${req}`
+    )
+    res.status(400).json({
+      status: 400,
+      message: '"service" is required',
     })
     return
   }
   try {
-    const ssoPayload = await validateTicket(ticket)
+    const ssoPayload = await validateTicket(ticket, service)
     const user = new User(ssoPayload)
 
     const ref = admin.firestore().collection('users').doc(user.username)
