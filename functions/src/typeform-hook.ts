@@ -3,7 +3,6 @@ import * as admin from 'firebase-admin'
 
 import { Path } from './models/Path'
 import { StepType } from './models/StepType'
-import { withEnableCORS } from './utils/decorators'
 
 interface TypeformAnswer {
   type: string
@@ -55,7 +54,10 @@ function getChosenPath(formResponseBody: any): Path | null {
   return null
 }
 
-async function signIn(req: functions.Request, res: functions.Response) {
+async function typeformWebhook(
+  req: functions.Request,
+  res: functions.Response
+) {
   if (req.method !== 'POST') {
     res.status(405).json({
       status: 405,
@@ -100,4 +102,4 @@ async function signIn(req: functions.Request, res: functions.Response) {
   }
 }
 
-export default withEnableCORS(signIn)
+export default typeformWebhook
