@@ -39,6 +39,18 @@ function validateTicket(ticket: string, service: string): Promise<SsoPayload> {
   })
 }
 
+function isUserCompScienceStudent(user: User): boolean {
+  if (!user.npm || !user.orgCode) {
+    return false
+  }
+
+  if (user.faculty && user.faculty !== 'ILMU KOMPUTER') {
+    return false
+  }
+
+  return true
+}
+
 async function signIn(req: functions.Request, res: functions.Response) {
   if (req.method !== 'POST') {
     res.status(405).json({
@@ -70,6 +82,14 @@ async function signIn(req: functions.Request, res: functions.Response) {
   try {
     const ssoPayload = await validateTicket(ticket, service)
     const user = new User(ssoPayload)
+
+    if (!isUserCompScienceStudent(user)) {
+      res.status(401).json({
+        status: 401,
+        message: 'User is not from faculty of computer science student',
+      })
+      return
+    }
 
     const ref = admin.firestore().collection('users').doc(user.username)
     const doc = await ref.get()
