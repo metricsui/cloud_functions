@@ -5,7 +5,7 @@ export interface Action {
   name: string
   description: string
   url: string
-  deadline: Date
+  deadline: number
   overdue: boolean
   step: Step
 }
@@ -31,7 +31,7 @@ export interface UserResponse {
 export interface Step {
   status: StepStatus
   description: string
-  deadline: Date
+  deadline: number
   type: StepType
 }
 

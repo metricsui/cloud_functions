@@ -65,7 +65,7 @@ function getUserStepsAndAction(
       const userStep: Step = {
         type: appStep.type,
         description: appStep.taskDescription,
-        deadline: appStep.deadline,
+        deadline: appStep.deadline.getTime(),
         status: StepStatus.completed,
       }
 
@@ -91,7 +91,7 @@ function getUserStepsAndAction(
   const nextUserStep = {
     type: appStep.type,
     description: appStep.taskDescription,
-    deadline: appStep.deadline,
+    deadline: appStep.deadline.getTime(),
     status: isExceededDeadline ? StepStatus.overdue : StepStatus.inProgress,
   }
   userSteps.push(nextUserStep)
@@ -102,7 +102,7 @@ function getUserStepsAndAction(
       ? EXCEEDED_DEADLINE_DESC
       : appStep.description,
     url: appStep.url,
-    deadline: appStep.deadline,
+    deadline: appStep.deadline.getTime(),
     overdue: isExceededDeadline,
     step: nextUserStep,
   }
@@ -112,7 +112,7 @@ function getUserStepsAndAction(
     userSteps.push({
       type: remainingStep.type,
       description: appStep.taskDescription,
-      deadline: remainingStep.deadline,
+      deadline: remainingStep.deadline.getTime(),
       status: StepStatus.notStarted,
     })
   })

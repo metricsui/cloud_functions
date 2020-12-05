@@ -1,6 +1,6 @@
 export enum StepStatus {
-  notStarted,
-  inProgress,
-  completed,
-  overdue,
+  notStarted = 'notStarted',
+  inProgress = 'inProgress',
+  completed = 'completed',
+  overdue = 'overdue',
 }
