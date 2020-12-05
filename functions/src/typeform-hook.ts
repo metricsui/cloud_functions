@@ -17,13 +17,12 @@ interface TypeformAnswer {
   }
 }
 
-function isFromTypeformWebhook(req: functions.Request): boolean {
+function isFromTypeformWebhook(req: any): boolean {
   try {
-    const expectedSig = req.header('Typeform-Signature')
-
+    const expectedSig = req.header('typeform-signature')
     const hash = crypto
       .createHmac('sha256', functions.config().typeform.secret)
-      .update(JSON.stringify(req.body))
+      .update(req.rawBody)
       .digest('base64')
 
     const actualSig = `sha256=${hash}`
