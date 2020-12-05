@@ -1,3 +1,5 @@
+import * as admin from 'firebase-admin'
+
 import { StepStatus } from './StepStatus'
 import { StepType } from './StepType'
 
@@ -5,7 +7,7 @@ export interface Action {
   name: string
   description: string
   url: string
-  deadline: number
+  deadline: number | undefined
   overdue: boolean
   step: Step
 }
@@ -18,26 +20,26 @@ export interface Path {
 export interface User {
   name: string
   username: string
-  completedSteps?: StepType[]
+  completedSteps: StepType[]
 }
 
 export interface UserResponse {
   user: User
-  path?: Path
-  action?: Action
+  path: Path | undefined
+  action: Action | undefined
   steps: Step[]
 }
 
 export interface Step {
   status: StepStatus
   description: string
-  deadline: number
+  deadline: number | undefined
   type: StepType
 }
 
 export interface ApplicationStep {
   buttonName: string
-  deadline: Date
+  deadline: admin.firestore.Timestamp | undefined
   description: string
   taskDescription: string
   stepNumber: number
