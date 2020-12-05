@@ -83,18 +83,19 @@ async function signIn(req: functions.Request, res: functions.Response) {
     const ssoPayload = await validateTicket(ticket, service)
     const user = new User(ssoPayload)
 
-    if (!isUserCompScienceStudent(user)) {
-      res.status(401).json({
-        status: 401,
-        message: 'User is not from faculty of computer science student',
-      })
-      return
-    }
-
     const ref = admin.firestore().collection('users').doc(user.username)
     const doc = await ref.get()
     if (!doc.exists) {
       await ref.set(user.toPlainObject())
+    }
+
+    if (!isUserCompScienceStudent(user)) {
+      res.status(401).json({
+        status: 401,
+        message: 'User is not from faculty of computer science student',
+        data: user,
+      })
+      return
     }
 
     const secretKey = functions.config().auth.jwt_secret

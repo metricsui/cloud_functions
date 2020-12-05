@@ -6,6 +6,7 @@ import * as admin from 'firebase-admin'
 admin.initializeApp()
 
 import auth from './auth'
+import dashboard from './dashboard'
 import typeformHook from './typeform-hook'
 
 exports.auth = functions.region('asia-southeast2').https.onRequest(auth)
@@ -13,3 +14,8 @@ exports.auth = functions.region('asia-southeast2').https.onRequest(auth)
 exports.typeformHook = functions
   .region('asia-southeast2')
   .https.onRequest(typeformHook)
+
+exports.auth = functions.region('asia-southeast2').https.onRequest(auth)
+exports.dashboard = functions
+  .region('asia-southeast2')
+  .https.onRequest(dashboard)
