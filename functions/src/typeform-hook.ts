@@ -27,7 +27,7 @@ function isFromTypeformWebhook(req: functions.Request): boolean {
 
   const actualSig = `sha256=${hash}`
 
-  return actualSig !== expectedSig
+  return actualSig === expectedSig
 }
 
 function pathLabelToPathDocumentId(pathLabel: string): Path | null {
