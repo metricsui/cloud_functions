@@ -15,6 +15,7 @@ import { StepStatus } from './models/StepStatus'
 
 import { withEnableCORS } from './utils/decorators'
 import { StepType } from './models/StepType'
+import Logger from './utils/logger'
 
 const EXCEEDED_DEADLINE_DESC =
   'Sorry, you have exceeded your deadline. ' +
@@ -35,14 +36,20 @@ function validateJwtAndGetUser(
       maxAge: '1d',
     })
     return decodedUser as UserModel
-  } catch (e) {}
+  } catch (e) {
+    const err: jwt.JsonWebTokenError = e
+    if (!err.message.includes('maxAge exceeded')) {
+      Logger.error(`[403] Unauthorized JWT: ${token} error: ${err}`)
+    }
+  }
 
   return undefined
 }
 
 function getUserStepsAndAction(
   completedSteps: StepType[] | undefined,
-  applicationSteps: ApplicationStep[]
+  applicationSteps: ApplicationStep[],
+  username: string
 ): UserStepAndAction {
   const userSteps: Step[] = []
   let userAction: Action | undefined = undefined
@@ -59,6 +66,9 @@ function getUserStepsAndAction(
     completedSteps.map((completedStep) => {
       const appStep = applicationStepMap.get(completedStep)
       if (!appStep) {
+        Logger.warn(
+          `Undefined completed step: ${completedStep.toString()}, username: ${username}`
+        )
         return
       }
 
@@ -77,11 +87,15 @@ function getUserStepsAndAction(
   // Insert next +1 step in remainingStep as inProgress status
   const nextStep: ApplicationStep | undefined = remainingSteps.shift()
   if (!nextStep) {
+    Logger.warn(`Undefined when remainingSteps.shift(), username: ${username}`)
     return { userSteps, userAction }
   }
 
   const appStep = applicationStepMap.get(nextStep.type)
   if (!appStep) {
+    Logger.warn(
+      `Undefined next step: ${nextStep.toString()}, username: ${username}`
+    )
     return { userSteps, userAction }
   }
 
@@ -154,83 +168,87 @@ async function getUserPath(path: string): Promise<Path> {
 }
 
 async function getUserInfo(req: functions.Request, res: functions.Response) {
-  if (req.method !== 'GET') {
-    res.status(405).json({
-      status: 405,
-      message: `${req.method} is not allowed`,
-    })
-    return
-  }
-  // User Validation
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({
-      status: 401,
-      message: 'Token is not found',
-    })
-    return
-  }
+  try {
+    if (req.method !== 'GET') {
+      res.status(405).json({
+        status: 405,
+        message: `${req.method} is not allowed`,
+      })
+      return
+    }
+    // User Validation
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({
+        status: 401,
+        message: 'Token is not found',
+      })
+      return
+    }
 
-  const token = authHeader.split(' ')[1]
-  const secretKey = functions.config().auth.jwt_secret
-  console.log('secret key', secretKey)
+    const token = authHeader.split(' ')[1]
+    const secretKey = functions.config().auth.jwt_secret
 
-  const user = validateJwtAndGetUser(token, secretKey)
-  if (!user) {
-    res.status(401).json({
-      status: 401,
-      message: 'Token is invalid or expired',
-    })
-    return
-  }
+    const user = validateJwtAndGetUser(token, secretKey)
+    if (!user) {
+      res.status(401).json({
+        status: 401,
+        message: 'Token is invalid or expired',
+      })
+      return
+    }
 
-  const userRef = admin.firestore().collection('users').doc(user.username)
-  const userDoc = await userRef.get()
-  if (!userDoc.exists) {
-    res.status(401).json({
-      status: 401,
-      message: 'User is not found',
-    })
-    functions.logger.warn(
-      `JWT auth user is not found in firestore, user: ${user}`
+    const userRef = admin.firestore().collection('users').doc(user.username)
+    const userDoc = await userRef.get()
+    if (!userDoc.exists) {
+      res.status(401).json({
+        status: 401,
+        message: 'User is not found',
+      })
+      Logger.warn(`JWT auth user is not found in firestore, user: ${user}`)
+      return
+    }
+
+    // Dashboard payload
+    const completedSteps: StepType[] | undefined = userDoc.get('completedSteps')
+    const chosenPath: string | undefined = userDoc.get('chosenPath')
+
+    const applicationSteps = await getApplicationSteps()
+    const sortedApplicationSteps = applicationSteps.sort(
+      (a, b) => a.stepNumber - b.stepNumber
     )
-    return
+
+    const { userSteps, userAction } = getUserStepsAndAction(
+      completedSteps,
+      sortedApplicationSteps,
+      userDoc.get('username')
+    )
+
+    const responseUser: User = {
+      name: userDoc.get('name'),
+      username: userDoc.get('username'),
+      completedSteps: userDoc.get('completedSteps'),
+    }
+
+    const response: UserResponse = {
+      user: responseUser,
+      path: chosenPath ? await getUserPath(chosenPath) : undefined,
+      action: userAction,
+      steps: userSteps,
+    }
+
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully get user data',
+      data: response,
+    })
+  } catch (e) {
+    Logger.error(`Caught exception: ${e}`)
+    res.status(500).json({
+      status: 500,
+      message: 'Something is wrong with the server :(',
+    })
   }
-
-  // Dashboard payload
-  const completedSteps: StepType[] | undefined = userDoc.get('completedSteps')
-  const chosenPath: string | undefined = userDoc.get('chosenPath')
-
-  const applicationSteps = await getApplicationSteps()
-  const sortedApplicationSteps = applicationSteps.sort((a, b) =>
-    a.stepNumber < b.stepNumber ? -1 : a.stepNumber > b.stepNumber ? 1 : 0
-  )
-
-  console.log('applicationSteps', sortedApplicationSteps)
-
-  const { userSteps, userAction } = getUserStepsAndAction(
-    completedSteps,
-    sortedApplicationSteps
-  )
-
-  const responseUser: User = {
-    name: userDoc.get('name'),
-    username: userDoc.get('username'),
-    completedSteps: userDoc.get('completedSteps'),
-  }
-
-  const response: UserResponse = {
-    user: responseUser,
-    path: chosenPath ? await getUserPath(chosenPath) : undefined,
-    action: userAction,
-    steps: userSteps,
-  }
-
-  res.status(200).json({
-    status: 200,
-    message: 'Successfully get user data',
-    data: response,
-  })
 }
 
 export default withEnableCORS(getUserInfo)
