@@ -14,11 +14,12 @@ export const withEnableCORS = (wrapped: CloudFunction): CloudFunction => async (
   // and caches preflight response for 3600s
 
   res.set('Access-Control-Allow-Origin', '*')
+  res.set('Access-Control-Allow-Credentials', 'true')
 
   if (req.method === 'OPTIONS') {
     // Send response to OPTIONS requests
-    res.set('Access-Control-Allow-Methods', 'GET')
-    res.set('Access-Control-Allow-Headers', 'Content-Type')
+    res.set('Access-Control-Allow-Methods', 'GET,POST')
+    res.set('Access-Control-Allow-Headers', 'Bearer, Content-Type')
     res.set('Access-Control-Max-Age', '3600')
     res.status(204).send('')
   } else {
