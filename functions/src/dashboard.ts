@@ -21,15 +21,17 @@ function validateJwtAndGetUser(
 }
 
 async function getUserInfo(req: functions.Request, res: functions.Response) {
-  const token = req.headers.authorization
+  const authHeader = req.headers.authorization
 
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401).json({
       status: 401,
       message: 'Token is not found',
     })
     return
   }
+
+  const token = authHeader.split(' ')[1]
 
   const secretKey = functions.config().auth.jwt_secret
   const user = validateJwtAndGetUser(token, secretKey)
@@ -44,7 +46,7 @@ async function getUserInfo(req: functions.Request, res: functions.Response) {
   res.status(200).json({
     status: 200,
     message: 'Successfully validate token.',
-    data: token,
+    data: user,
   })
 }
 
