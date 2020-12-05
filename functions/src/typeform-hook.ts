@@ -18,16 +18,21 @@ interface TypeformAnswer {
 }
 
 function isFromTypeformWebhook(req: functions.Request): boolean {
-  const expectedSig = req.header('Typeform-Signature')
+  try {
+    const expectedSig = req.header('Typeform-Signature')
 
-  const hash = crypto
-    .createHmac('sha256', functions.config().typeform.secret)
-    .update(req.body)
-    .digest('base64')
+    const hash = crypto
+      .createHmac('sha256', functions.config().typeform.secret)
+      .update(JSON.stringify(req.body))
+      .digest('base64')
 
-  const actualSig = `sha256=${hash}`
+    const actualSig = `sha256=${hash}`
 
-  return actualSig === expectedSig
+    return actualSig === expectedSig
+  } catch (e) {
+    Logger.error(e)
+    return false
+  }
 }
 
 function pathLabelToPathDocumentId(pathLabel: string): Path | null {
