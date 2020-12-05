@@ -15,4 +15,5 @@ node_modules/
 
 .firebase
 
+functions/lib
 package-lock.json
