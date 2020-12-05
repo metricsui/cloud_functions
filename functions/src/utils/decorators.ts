@@ -19,7 +19,7 @@ export const withEnableCORS = (wrapped: CloudFunction): CloudFunction => async (
   if (req.method === 'OPTIONS') {
     // Send response to OPTIONS requests
     res.set('Access-Control-Allow-Methods', 'GET,POST')
-    res.set('Access-Control-Allow-Headers', 'Bearer, Content-Type')
+    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type')
     res.set('Access-Control-Max-Age', '3600')
     res.status(204).send('')
   } else {
