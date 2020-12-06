@@ -31,7 +31,7 @@ async function googleformWebhook(
     const secretKey = body.secret_key
     const chosenPath = pathLabelToPathDocumentId(body.path)
 
-    if (secretKey !== functions.config().googleformHook.secret_key) {
+    if (secretKey !== functions.config().googleformhook.secret_key) {
       throw Error(
         `[403] FORBIDDEN : Secret key mismatch. received ${secretKey}`
       )
