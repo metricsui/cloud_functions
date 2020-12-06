@@ -1,24 +1,9 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 
-import { Path } from './models/Path'
+import { pathLabelToPathDocumentId } from './utils/common'
 import { StepType } from './models/StepType'
 import Logger from './utils/logger'
-
-function pathLabelToPathDocumentId(pathLabel: string): Path | null {
-  switch (pathLabel) {
-    case 'Data Science & Analytics':
-      return Path.dataScienceAnalytics
-    case 'Product Design':
-      return Path.productDesign
-    case 'Product Management':
-      return Path.productManagement
-    case 'Software Engineering':
-      return Path.softwareEngineering
-    default:
-      return null
-  }
-}
 
 async function googleformWebhook(
   req: functions.Request,
@@ -46,10 +31,7 @@ async function googleformWebhook(
     const secretKey = body.secret_key
     const chosenPath = pathLabelToPathDocumentId(body.path)
 
-    // TODO: move secret key to env
-    if (
-      secretKey !== 'a6d6901d8b2bfdb265fd0b0b234bda75d9e1ef0b5b1627722294c039'
-    ) {
+    if (secretKey !== functions.config().googleformHook.secret_key) {
       throw Error(
         `[403] FORBIDDEN : Secret key mismatch. received ${secretKey}`
       )
