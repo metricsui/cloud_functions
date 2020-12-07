@@ -104,9 +104,9 @@ async function googleformWebhook(
 
     if (doc.data()?.chosenPath !== chosenPath) {
       Logger.warn(
-        `User ${username} previously chose ${JSON.stringify(
+        `User ${username} previously applied & chose **"${
           doc.data()?.chosenPath
-        )}, now choose ${JSON.stringify(chosenPath)}`
+        }"**, but submitted the task for **"${chosenPath}"**`
       )
     }
 
