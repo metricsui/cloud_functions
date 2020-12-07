@@ -9,8 +9,8 @@ export function sendToDiscord(
   setImmediate(async () => {
     try {
       const content =
-        contentString.substring(0, 1000) + shouldPrintSeeMore &&
-        contentString.length > 1000
+        contentString.substring(0, 1000) +
+        (shouldPrintSeeMore && contentString.length > 1000)
           ? ` ...\n See more at: https://console.firebase.google.com/u/0/project/metrics-csui/functions/logs`
           : ''
       await axios.default.post(
@@ -19,7 +19,7 @@ export function sendToDiscord(
           content,
         },
         {
-          timeout: 3000,
+          timeout: 10000,
         }
       )
     } catch (e) {

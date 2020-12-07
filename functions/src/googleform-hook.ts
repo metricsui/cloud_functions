@@ -24,6 +24,9 @@ function getDiscordSubmissionWebhookUrl(path: Path): string {
 
 function notifyDiscord(submission: SubmissionDocument): void {
   const chosenPathEnum = Path[submission.chosenPath]
+  Logger.info(
+    `Notifying Discord for ${submission.username}'s submission to ${submission.chosenPath}`
+  )
   const webhookUrl = getDiscordSubmissionWebhookUrl(chosenPathEnum)
   sendToDiscord(
     webhookUrl,
