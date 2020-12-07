@@ -3,16 +3,7 @@ import * as axios from 'axios'
 import * as util from 'util'
 
 function entryFromArgs(severity, args) {
-  let entry = {}
-  const lastArg = args[args.length - 1]
-  if (lastArg && typeof lastArg === 'object' && lastArg.constructor == Object) {
-    entry = args.pop()
-  }
-  return Object.assign({}, entry, {
-    severity,
-    // mimic `console.*` behavior, see https://nodejs.org/api/console.html#console_console_log_data_args
-    message: util.format.apply(null, args),
-  })
+  return `[${severity}] ` + util.format.apply(null, args)
 }
 
 export class Logger {
