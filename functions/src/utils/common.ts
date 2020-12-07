@@ -1,6 +1,6 @@
 import { Path } from '../models/Path'
 
-export function pathLabelToPathDocumentId(pathLabel: string): Path | null {
+export function pathLabelToPathDocumentId(pathLabel: string): Path {
   switch (pathLabel) {
     case 'Data Science & Analytics':
       return Path.dataScienceAnalytics
@@ -11,6 +11,6 @@ export function pathLabelToPathDocumentId(pathLabel: string): Path | null {
     case 'Software Engineering':
       return Path.softwareEngineering
     default:
-      return null
+      return Path.unknown
   }
 }

@@ -3,4 +3,5 @@ export enum Path {
   productDesign = 'productDesign',
   productManagement = 'productManagement',
   softwareEngineering = 'softwareEngineering',
+  unknown = 'unknown',
 }

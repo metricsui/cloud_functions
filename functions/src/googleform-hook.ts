@@ -82,7 +82,7 @@ async function googleformWebhook(
     const doc = await ref.get()
     if (!doc.exists) {
       throw Error(
-        `[400] BAD REQUEST: User ${username} submitted Typeform without signing in.`
+        `[400] BAD REQUEST: User ${username} submitted Google Form without signing in.`
       )
     }
 
@@ -123,7 +123,7 @@ async function googleformWebhook(
       submissionUrl,
       username,
       receivedAt: admin.firestore.FieldValue.serverTimestamp(),
-      chosenPath: doc.get('chosenPath'),
+      chosenPath,
     }
     await submissionRef.set(submissionDoc)
     notifyDiscord(submissionDoc)
