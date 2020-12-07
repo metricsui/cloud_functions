@@ -1,28 +1,26 @@
 import * as functions from 'firebase-functions'
-import * as axios from 'axios'
 import * as util from 'util'
+import { sendToDiscord } from './discord'
 
 function entryFromArgs(severity, args) {
-  return `[${severity}] ` + util.format.apply(null, args)
+  return `**[${severity}]** ` + util.format.apply(null, args)
 }
 
 export class Logger {
   static error(...args: any[]): void {
     functions.logger.error(...args)
-    setImmediate(async () => {
-      await axios.default.post(functions.config().discord.error_webhook_url, {
-        content: entryFromArgs('ERROR', args),
-      })
-    })
+    sendToDiscord(
+      functions.config().discord.error_webhook_url,
+      entryFromArgs('ERROR', args)
+    )
   }
 
   static warn(...args: any[]): void {
     functions.logger.warn(...args)
-    setImmediate(async () => {
-      await axios.default.post(functions.config().discord.error_webhook_url, {
-        content: entryFromArgs('INFO', args),
-      })
-    })
+    sendToDiscord(
+      functions.config().discord.warn_webhook_url,
+      entryFromArgs('WARN', args)
+    )
   }
 
   static info(...args: any[]) {

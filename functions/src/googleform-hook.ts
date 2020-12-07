@@ -4,6 +4,44 @@ import * as admin from 'firebase-admin'
 import { pathLabelToPathDocumentId } from './utils/common'
 import { StepType } from './models/StepType'
 import Logger from './utils/logger'
+import { Path } from './models/Path'
+import { sendToDiscord } from './utils/discord'
+
+function getDiscordSubmissionWebhookUrl(path: Path): string {
+  switch (path) {
+    case Path.dataScienceAnalytics:
+      return functions.config().discord.data_submission_webhook
+    case Path.productDesign:
+      return functions.config().discord.design_submission_webhook
+    case Path.productManagement:
+      return functions.config().discord.product_submission_webhook
+    case Path.softwareEngineering:
+      return functions.config().discord.eng_submission_webhook
+    default:
+      return functions.config().discord.error_webhook_url
+  }
+}
+
+function notifyDiscord(submission: SubmissionDocument): void {
+  const chosenPathEnum = Path[submission.chosenPath]
+  const webhookUrl = getDiscordSubmissionWebhookUrl(chosenPathEnum)
+  sendToDiscord(
+    webhookUrl,
+    `**New Task Submitted**
+Username: ${submission.username}
+Path: ${submission.chosenPath}
+URL: ${submission.submissionUrl}
+`
+  )
+}
+
+interface SubmissionDocument {
+  submittedAt: admin.firestore.Timestamp
+  submissionUrl: string
+  username: string
+  receivedAt: admin.firestore.FieldValue
+  chosenPath: string
+}
 
 async function googleformWebhook(
   req: functions.Request,
@@ -79,12 +117,15 @@ async function googleformWebhook(
       .firestore()
       .collection('submissions')
       .doc(username)
-    await submissionRef.set({
+    const submissionDoc: SubmissionDocument = {
       submittedAt: admin.firestore.Timestamp.fromDate(new Date(submittedAt)),
       submissionUrl,
       username,
       receivedAt: admin.firestore.FieldValue.serverTimestamp(),
-    })
+      chosenPath: doc.get('chosenPath'),
+    }
+    await submissionRef.set(submissionDoc)
+    notifyDiscord(submissionDoc)
   } catch (e) {
     Logger.error(e)
   } finally {
