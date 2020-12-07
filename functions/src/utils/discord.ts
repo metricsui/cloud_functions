@@ -8,11 +8,10 @@ export function sendToDiscord(
 ) {
   setImmediate(async () => {
     try {
-      const content =
-        contentString.substring(0, 1000) +
-        (shouldPrintSeeMore && contentString.length > 1000)
-          ? ` ...\n See more at: https://console.firebase.google.com/u/0/project/metrics-csui/functions/logs`
-          : ''
+      let content = contentString.substring(0, 1000)
+      if (shouldPrintSeeMore && contentString.length > 1000) {
+        content += ` ...\n See more at: https://console.firebase.google.com/u/0/project/metrics-csui/functions/logs`
+      }
       await axios.default.post(
         webhookUrl,
         {
