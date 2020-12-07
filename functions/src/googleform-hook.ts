@@ -4,6 +4,48 @@ import * as admin from 'firebase-admin'
 import { pathLabelToPathDocumentId } from './utils/common'
 import { StepType } from './models/StepType'
 import Logger from './utils/logger'
+import { Path } from './models/Path'
+import { sendToDiscord } from './utils/discord'
+
+function getDiscordSubmissionWebhookUrl(path: Path): string {
+  switch (path) {
+    case Path.dataScienceAnalytics:
+      return functions.config().discord.data_submission_webhook
+    case Path.productDesign:
+      return functions.config().discord.design_submission_webhook
+    case Path.productManagement:
+      return functions.config().discord.product_submission_webhook
+    case Path.softwareEngineering:
+      return functions.config().discord.eng_submission_webhook
+    default:
+      return functions.config().discord.error_webhook_url
+  }
+}
+
+function notifyDiscord(submission: SubmissionDocument): void {
+  const chosenPathEnum = Path[submission.chosenPath]
+  Logger.info(
+    `Notifying Discord for ${submission.username}'s submission to ${submission.chosenPath}`
+  )
+  const webhookUrl = getDiscordSubmissionWebhookUrl(chosenPathEnum)
+  sendToDiscord(
+    webhookUrl,
+    `**New Task Submitted**
+Username: ${submission.username}
+Path: ${submission.chosenPath}
+URL: ${submission.submissionUrl}
+`,
+    false
+  )
+}
+
+interface SubmissionDocument {
+  submittedAt: admin.firestore.Timestamp
+  submissionUrl: string
+  username: string
+  receivedAt: admin.firestore.FieldValue
+  chosenPath: string
+}
 
 async function googleformWebhook(
   req: functions.Request,
@@ -43,7 +85,7 @@ async function googleformWebhook(
     const doc = await ref.get()
     if (!doc.exists) {
       throw Error(
-        `[400] BAD REQUEST: User ${username} submitted Typeform without signing in.`
+        `[400] BAD REQUEST: User ${username} submitted Google Form without signing in.`
       )
     }
 
@@ -62,9 +104,9 @@ async function googleformWebhook(
 
     if (doc.data()?.chosenPath !== chosenPath) {
       Logger.warn(
-        `User ${username} previously chose ${JSON.stringify(
+        `User ${username} previously applied & chose **"${
           doc.data()?.chosenPath
-        )}, now choose ${JSON.stringify(chosenPath)}`
+        }"**, but submitted the task for **"${chosenPath}"**`
       )
     }
 
@@ -79,12 +121,15 @@ async function googleformWebhook(
       .firestore()
       .collection('submissions')
       .doc(username)
-    await submissionRef.set({
+    const submissionDoc: SubmissionDocument = {
       submittedAt: admin.firestore.Timestamp.fromDate(new Date(submittedAt)),
       submissionUrl,
       username,
       receivedAt: admin.firestore.FieldValue.serverTimestamp(),
-    })
+      chosenPath,
+    }
+    await submissionRef.set(submissionDoc)
+    notifyDiscord(submissionDoc)
   } catch (e) {
     Logger.error(e)
   } finally {
