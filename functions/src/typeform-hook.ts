@@ -4,6 +4,7 @@ import * as admin from 'firebase-admin'
 import * as crypto from 'crypto'
 
 import { Path } from './models/Path'
+import { pathLabelToPathDocumentId } from './utils/common'
 import { StepType } from './models/StepType'
 import Logger from './utils/logger'
 
@@ -31,21 +32,6 @@ function isFromTypeformWebhook(req: any): boolean {
   } catch (e) {
     Logger.error(e)
     return false
-  }
-}
-
-function pathLabelToPathDocumentId(pathLabel: string): Path | null {
-  switch (pathLabel) {
-    case 'Data Science & Analytics':
-      return Path.dataScienceAnalytics
-    case 'Product Design':
-      return Path.productDesign
-    case 'Product Management':
-      return Path.productManagement
-    case 'Software Engineering':
-      return Path.softwareEngineering
-    default:
-      return null
   }
 }
 

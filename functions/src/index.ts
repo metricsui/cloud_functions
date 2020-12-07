@@ -8,6 +8,7 @@ admin.initializeApp()
 import auth from './auth'
 import dashboard from './dashboard'
 import typeformHook from './typeform-hook'
+import googleformHook from './googleform-hook'
 
 exports.auth = functions.region('asia-southeast2').https.onRequest(auth)
 
@@ -19,3 +20,7 @@ exports.auth = functions.region('asia-southeast2').https.onRequest(auth)
 exports.dashboard = functions
   .region('asia-southeast2')
   .https.onRequest(dashboard)
+
+exports.googleformHook = functions
+  .region('asia-southeast2')
+  .https.onRequest(googleformHook)
