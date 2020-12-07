@@ -31,7 +31,8 @@ function notifyDiscord(submission: SubmissionDocument): void {
 Username: ${submission.username}
 Path: ${submission.chosenPath}
 URL: ${submission.submissionUrl}
-`
+`,
+    false
   )
 }
 
